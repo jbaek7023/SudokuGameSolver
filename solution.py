@@ -40,20 +40,22 @@ def naked_twins(values):
     """
 
     # Find all instances of naked twins
-    twin_values = [box for box in values.keys() if len(values[box]) == 2]
+    twin_instances = []
+
+    len_two_boxes = [box for box in values.keys() if len(values[box]) == 2]
+    for twin_box in len_two_boxes:
+        for peer in peers[twin_box]:
+            if values[peer] == values[twin_box]:
+                if [peer, twin_box] not in twin_instances and [twin_box, peer] not in twin_instances:
+                    twin_instances.append([peer, twin_box])
 
     # Eliminate the naked twins as possibilities for their peers
-    for box in twin_values:
-        digit = values[box]
-        # i.c) box:A1 digit: 34
-        for peer in peers[box]:
-            #A2 in A2, A3, A4 D1, F1
-
-            #if the box and its peer has same digits,
-            if values[peer] == values[box]:
-                #if two boxes are on same row,
-                pass
-
+    for twin_instance in twin_instances:
+        # twin_instance is now [B1, A1] (i.c.)
+        shared_peers = peers[twin_instance[0]] & peers[twin_instance[1]]
+        for shared_peer in shared_peers:
+            digit = values[twin_instance[0]]
+            values[shared_peer] = values[shared_peer].replace(digit[0], '').replace(digit[1], '')
     return values
 
 

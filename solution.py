@@ -41,7 +41,6 @@ def naked_twins(values):
 
     # Find all instances of naked twins
     twin_instances = []
-
     len_two_boxes = [box for box in values.keys() if len(values[box]) == 2]
     for twin_box in len_two_boxes:
         for peer in peers[twin_box]:

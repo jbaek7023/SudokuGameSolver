@@ -11,10 +11,7 @@ boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
-diag_units = [
-    ['A1', 'B2', 'C3', 'D4', 'E5', 'F6', 'G7', 'H8', 'I9'],
-    ['A9', 'B8', 'C7', 'D6', 'E5', 'F4', 'G3', 'H2', 'I1']
-]
+diag_units =  [[r+c for r,c in zip(rows,cols)], [r+c for r,c in zip(rows,cols[::-1])]]
 unitlist = row_units + column_units + square_units + diag_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
@@ -46,17 +43,23 @@ def naked_twins(values):
         for peer in peers[twin_box]:
             if values[peer] == values[twin_box]:
                 if [peer, twin_box] not in twin_instances and [twin_box, peer] not in twin_instances:
+                    # append twin instance not to check same twin instances
                     twin_instances.append([peer, twin_box])
-
-    # Eliminate the naked twins as possibilities for their peers
-    for twin_instance in twin_instances:
-        # twin_instance is now [B1, A1] (i.c.)
-        shared_peers = peers[twin_instance[0]] & peers[twin_instance[1]]
-        for shared_peer in shared_peers:
-            digit = values[twin_instance[0]]
-            values[shared_peer] = values[shared_peer].replace(digit[0], '').replace(digit[1], '')
+                    # Eliminate the naked twins as possibilities for their peers
+                    eliminateNakedTwins(peer, twin_box, values)
     return values
 
+def eliminateNakedTwins(peer, twin_box, values):
+    """Eliminate the digits from twins' peers
+    :param peer: first box of twins
+    :param twin_box: second box of twins
+    :param values: a dictionary of the form {'box_name': '123456789', ...}
+    :return: nothing
+    """
+    shared_peers = peers[peer] & peers[twin_box]
+    for shared_peer in shared_peers:
+        digit = values[peer]
+        values[shared_peer] = values[shared_peer].replace(digit[0], '').replace(digit[1], '')
 
 def grid_values(grid):
     """
@@ -93,6 +96,10 @@ def display(values):
     print
 
 def eliminate(values):
+    """Eliminate values using the elimination strategy.
+    :param values: The sudoku in dictionary form
+    :return: The sudoku in dictionary form
+    """
     solved_values = [box for box in values.keys() if len(values[box]) == 1]
     for box in solved_values:
         digit = values[box]
@@ -102,6 +109,10 @@ def eliminate(values):
     return values
 
 def only_choice(values):
+    """Eliminate values using the only choice strategy.
+    :param values: The sudoku in dictionary form
+    :return: The sudoku in dictionary form
+    """
     for unit in unitlist:
         for digit in '123456789':
             dplaces = [box for box in unit if digit in values[box]]
@@ -110,7 +121,10 @@ def only_choice(values):
     return values
 
 def reduce_puzzle(values):
-    solved_values = [box for box in values.keys() if len(values[box]) == 1]
+    """Reduce puzzles from dictionary
+    :param values: a dictionary of the form {'box_name': '123456789', ...}
+    :return: reduced dictionary
+    """
     stalled = False
     while not stalled:
         solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
